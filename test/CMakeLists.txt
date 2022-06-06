@@ -6,6 +6,7 @@ file(GLOB ${APP}_SOURCES *.cpp)
 file(GLOB ${APP}_HEADERS include/*.h; include/*.hpp)
 
 set(${APP}_DEPEND)
+list(APPEND ${APP}_DEPEND ${CMAKE_SOURCE_DIR}/src/CombFilter/include/CombFilterIf.h)
 
 target_include_directories(${APP} PUBLIC include)
 target_sources(${APP} 
@@ -17,4 +18,5 @@ target_sources(${APP}
 target_link_libraries(${APP}
     PRIVATE
         Utility
+        CombFilter
 )
