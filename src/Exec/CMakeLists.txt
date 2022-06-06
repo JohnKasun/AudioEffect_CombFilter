@@ -6,6 +6,7 @@ file(GLOB ${APP}_SOURCES *.cpp)
 file(GLOB ${APP}_HEADERS include/*.h)
 
 set(${APP}_DEPEND)
+list(APPEND ${APP}_DEPEND ${CMAKE_SOURCE_DIR}/src/CombFilter/include/CombFilterIf.h)
 list(APPEND ${APP}_DEPEND ${CMAKE_SOURCE_DIR}/extern/AudioFileIO/include/AudioFileIf.h)
 
 target_sources(${APP} 
@@ -19,4 +20,5 @@ target_link_libraries(${APP}
                 Utility
                 AudioFileIO
                 RingBuffer
+                CombFilter
 )

@@ -7,6 +7,7 @@
 
 #include "AudioFileIf.h"
 #include "ErrorDef.h"
+#include "CombFilterIf.h"
 
 using std::string;
 using std::vector;
@@ -60,7 +61,7 @@ int main(int argc, char* argv[])
 
 	// Create instance
 
-	// Initialize vibrato
+	// Initialize instance
 
 	// Allocate memory
 	inputAudioData  = new float* [fileSpec.iNumChannels]{};
