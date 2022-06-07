@@ -17,7 +17,6 @@ using std::endl;
 
 int main(int argc, char* argv[])
 {
-	static const float maxDelayInSeconds = 10.0f;
 	static const int fileBlockSize = 1023;
 
 	CAudioFileIf* audioFileIn  = nullptr;
@@ -73,7 +72,7 @@ int main(int argc, char* argv[])
 
 	// Initialize instance
 	for (int c = 0; c < combFilter.size(); c++) {
-		if (combFilter[c]->init(filterType, fileSpec.fSampleRateInHz, maxDelayInSeconds) != Error_t::kNoError
+		if (combFilter[c]->init(filterType, fileSpec.fSampleRateInHz) != Error_t::kNoError
 			|| combFilter[c]->setParam(CombFilterIf::Param_t::gain, gain) != Error_t::kNoError
 			|| combFilter[c]->setParam(CombFilterIf::Param_t::delayInSec, delayInSec) != Error_t::kNoError) {
 			std::cout << "Invalid Parameters..." << std::endl;

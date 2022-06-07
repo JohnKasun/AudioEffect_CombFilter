@@ -4,25 +4,29 @@
 
 CombFilterIf::CombFilterIf()
 {
+	mParamRanges[gain][0] = -1.0f;
+	mParamRanges[gain][1] = 1.0f;
+	mParamRanges[delayInSec][0] = 0.0f;
+	mParamRanges[delayInSec][1] = 10.0f;
 }
 
 CombFilterIf::~CombFilterIf()
 {
 }
 
-Error_t CombFilterIf::init(FilterType_t filterType, float sampleRate, float maxDelayInSeconds)
+Error_t CombFilterIf::init(FilterType_t filterType, float sampleRate)
 {
-	if (sampleRate <= 0.0f || maxDelayInSeconds < 0.0f)
+	if (sampleRate <= 0.0f)
 		return Error_t::kFunctionInvalidArgsError;
 
 	reset();
 
 	switch (filterType) {
 	case fir:
-		mCombFilter = new CombFilterFir(sampleRate, maxDelayInSeconds);
+		mCombFilter = new CombFilterFir(sampleRate, mParamRanges[delayInSec][1]);
 		break;
 	case iir:
-		mCombFilter = new CombFilterIir(sampleRate, maxDelayInSeconds);
+		mCombFilter = new CombFilterIir(sampleRate, mParamRanges[delayInSec][1]);
 		break;
 	default:
 		return Error_t::kFunctionInvalidArgsError;

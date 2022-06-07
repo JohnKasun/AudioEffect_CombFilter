@@ -23,7 +23,7 @@ public:
 	CombFilterIf();
 	~CombFilterIf();
 
-	Error_t init(FilterType_t filterType, float sampleRate, float maxDelayInSeconds);
+	Error_t init(FilterType_t filterType, float sampleRate);
 	Error_t reset();
 
 	Error_t setParam(Param_t param, float value);
