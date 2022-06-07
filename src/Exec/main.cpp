@@ -17,6 +17,7 @@ using std::endl;
 
 int main(int argc, char* argv[])
 {
+	static const float maxDelayInSeconds = 10.0f;
 	static const int fileBlockSize = 1023;
 
 	CAudioFileIf* audioFileIn  = nullptr;
@@ -25,21 +26,27 @@ int main(int argc, char* argv[])
 
 	float** inputAudioData  = nullptr;
 	float** outputAudioData = nullptr;
+	std::vector<std::unique_ptr<CombFilterIf>> combFilter;
 
 	string inputFilePath{};
 	string outputFilePath{};
-	float widthInSec{};
-	float freqInHz{};
+	CombFilterIf::FilterType_t filterType{};
+	float gain{};
+	float delayInSec{};
 
-	if (argc < 5){
+	if (argc < 6){
 		cout << "Incorrect number of arguments!" << endl;
 		return -1;
 	}
-
+	
 	inputFilePath  = argv[1];
 	outputFilePath = argv[2];
-	widthInSec	   = atof(argv[3]);
-	freqInHz       = atof(argv[4]);
+	if (argv[3] == "fir")
+		filterType = CombFilterIf::FilterType_t::fir;
+	else if (argv[3] == "iir")
+		filterType = CombFilterIf::FilterType_t::iir;
+	gain = atof(argv[4]);
+	delayInSec = atof(argv[5]);
 
 	// Open Audio Files
 	CAudioFileIf::create(audioFileIn);
@@ -60,8 +67,22 @@ int main(int argc, char* argv[])
 	}
 
 	// Create instance
+	for (int c = 0; c < fileSpec.iNumChannels; c++) {
+		combFilter.emplace_back(new CombFilterIf());
+	}
 
 	// Initialize instance
+	for (int c = 0; c < combFilter.size(); c++) {
+		if (combFilter[c]->init(filterType, fileSpec.fSampleRateInHz, maxDelayInSeconds) != Error_t::kNoError
+			|| combFilter[c]->setParam(CombFilterIf::Param_t::gain, gain) != Error_t::kNoError
+			|| combFilter[c]->setParam(CombFilterIf::Param_t::delayInSec, delayInSec) != Error_t::kNoError) {
+			std::cout << "Invalid Parameters..." << std::endl;
+			combFilter[c].reset();
+			CAudioFileIf::destroy(audioFileOut);
+			CAudioFileIf::destroy(audioFileIn);
+			return -1;
+		}
+	}
 
 	// Allocate memory
 	inputAudioData  = new float* [fileSpec.iNumChannels]{};
@@ -75,6 +96,9 @@ int main(int argc, char* argv[])
 	long long iNumFrames = fileBlockSize;
 	while (!audioFileIn->isEof()){
 		audioFileIn->readData(inputAudioData, iNumFrames);
+		for (int c = 0; c < combFilter.size(); c++) {
+			combFilter[c]->process(inputAudioData[c], outputAudioData[c], iNumFrames);
+		}
 		audioFileOut->writeData(outputAudioData, iNumFrames);
 	}
 
@@ -88,6 +112,7 @@ int main(int argc, char* argv[])
 
 	CAudioFileIf::destroy(audioFileOut);
 	CAudioFileIf::destroy(audioFileOut);
+	combFilter.clear();
 
 	return 0;
 }
