@@ -3,6 +3,7 @@
 #include <memory>
 
 #include "CatchUtil.h"
+#include "Synthesis.h"
 #include "CombFilterIf.h"
 
 TEST_CASE("Error Checking") {
@@ -43,7 +44,37 @@ TEST_CASE("Error Checking") {
 }
 
 TEST_CASE("Feedforward") {
-	FAIL();
+	std::unique_ptr<CombFilterIf> combFilter;
+	float* inputBuffer;
+	float* outputBuffer;
+	float* groundBuffer;
+	const int numSamples = 10000;
+	const float gain = 1.0f;
+	const std::vector<float> sampleRates{ 44100};
+	const std::vector<float> freqs{ 300 };
+
+	combFilter.reset(new CombFilterIf());
+	inputBuffer = new float[numSamples] {};
+	outputBuffer = new float[numSamples] {};
+	groundBuffer = new float[numSamples] {};
+
+	for (int i = 0; i < sampleRates.size(); i++) {
+		CSynthesis::generateSine(inputBuffer, freqs[i], sampleRates[i], numSamples);
+		float delayInSec = 0.5f / freqs[i];
+		combFilter->init(CombFilterIf::FilterType_t::fir, sampleRates[i]);
+		combFilter->setParam(CombFilterIf::Param_t::gain, gain);
+		combFilter->setParam(CombFilterIf::Param_t::delayInSec, delayInSec);
+		combFilter->process(inputBuffer, outputBuffer, numSamples);
+
+		int delayInSamp = CUtil::float2int<int>(delayInSec * sampleRates[i]);
+		CatchUtil::compare(outputBuffer + delayInSamp, groundBuffer, numSamples - delayInSamp, 1E-2);
+		combFilter->reset();
+	}
+
+	combFilter.reset();
+	delete[] inputBuffer;
+	delete[] outputBuffer;
+	delete[] groundBuffer;
 }
 
 TEST_CASE("Magnitude") {

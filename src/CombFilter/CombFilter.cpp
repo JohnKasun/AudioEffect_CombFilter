@@ -3,7 +3,7 @@
 CombFilterBase::CombFilterBase(float sampleRate, float maxDelayInSeconds)
 {
 	mSampleRate = sampleRate;
-	mDelayLine.reset(new CRingBuffer<float>(maxDelayInSeconds * mSampleRate));
+	mDelayLine.reset(new CRingBuffer<float>(CUtil::float2int<int>(maxDelayInSeconds * mSampleRate)));
 }
 
 CombFilterBase::~CombFilterBase()
