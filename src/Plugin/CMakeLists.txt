@@ -10,6 +10,7 @@ file(GLOB ${APP}_SOURCES *.cpp)
 file(GLOB ${APP}_HEADERS include/*.h)
 
 set(${APP}_DEPEND)
+list(APPEND ${APP}_DEPEND ${CMAKE_SOURCE_DIR}/src/CombFilter/include/CombFilterIf.h)
 
 target_sources(${APP}
     PRIVATE
@@ -32,6 +33,7 @@ target_link_libraries(${APP}
     PRIVATE
         juce::juce_audio_utils
         Utility
+        CombFilter
     PUBLIC
         juce::juce_recommended_config_flags
         juce::juce_recommended_lto_flags

@@ -13,9 +13,12 @@ AudioPluginAudioProcessor::AudioPluginAudioProcessor()
     ),
     mParameters(*this, nullptr, juce::Identifier("Parameters"),
         {
-            std::make_unique<juce::AudioParameterFloat>("none", "None", 0.0f, 10.0f, 0.0f),
+            std::make_unique<juce::AudioParameterFloat>("delay", "Delay", 0.0f, 10.0f, 0.0f),
+            std::make_unique<juce::AudioParameterFloat>("gain", "Gain", -1.0f, 1.0f, 1.0f)
         })
 {
+    mDelayParam = mParameters.getRawParameterValue("delay");
+    mGainParam = mParameters.getRawParameterValue("gain");
 }
 
 AudioPluginAudioProcessor::~AudioPluginAudioProcessor()
@@ -90,12 +93,18 @@ void AudioPluginAudioProcessor::changeProgramName(int index, const juce::String&
 //==============================================================================
 void AudioPluginAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
-
+    for (int i = 0; i < mCombFilterFir.size(); i++) {
+        mCombFilterFir[i].init(CombFilterIf::FilterType_t::fir, sampleRate);
+        mCombFilterIir[i].init(CombFilterIf::FilterType_t::iir, sampleRate);
+    }
 }
 
 void AudioPluginAudioProcessor::releaseResources()
 {
-
+    for (int i = 0; i < mCombFilterFir.size(); i++) {
+        mCombFilterFir[i].reset();
+        mCombFilterIir[i].reset();
+    }
 }
 
 bool AudioPluginAudioProcessor::isBusesLayoutSupported(const BusesLayout& layouts) const
@@ -129,6 +138,15 @@ void AudioPluginAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
 
     juce::ScopedNoDenormals noDenormals;
 
+    for (int i = 0; i < mCombFilterFir.size(); i++) {
+        mCombFilterFir[i].setParam(CombFilterIf::Param_t::delayInSec, *mDelayParam);
+        mCombFilterFir[i].setParam(CombFilterIf::Param_t::gain, *mGainParam);
+        mCombFilterIir[i].setParam(CombFilterIf::Param_t::delayInSec, *mDelayParam);
+        mCombFilterIir[i].setParam(CombFilterIf::Param_t::gain, *mGainParam);
+    }
+
+    if (getNumOutputChannels() <= 0)
+        buffer.clear();
 }
 
 //==============================================================================

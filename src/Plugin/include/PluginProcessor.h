@@ -1,8 +1,10 @@
 #pragma once
 
 #include <juce_audio_processors/juce_audio_processors.h>
+#include <array>
 
 #include "ErrorDef.h"
+#include "CombFilterIf.h"
 
 //==============================================================================
 class AudioPluginAudioProcessor : public juce::AudioProcessor
@@ -48,6 +50,11 @@ private:
 
     juce::AudioProcessorValueTreeState mParameters;
 
+    std::atomic<float>* mDelayParam = nullptr;
+    std::atomic<float>* mGainParam = nullptr;
+
+    std::array<CombFilterIf, 2> mCombFilterFir;
+    std::array<CombFilterIf, 2> mCombFilterIir;
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AudioPluginAudioProcessor)
