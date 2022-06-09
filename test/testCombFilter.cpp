@@ -85,6 +85,12 @@ TEST_CASE("Correct Output") {
 		combFilter->process(inputBuffer, outputBuffer, numSamples);
 
 		CVectorFloat::div_I(outputBuffer, inputBuffer, numSamples);
+		int value = 0;
+		for (int i = 0; i < numSamples; i++) {
+			if (i % delayInSamp == 0)
+				value++;
+			groundBuffer[i] = value;
+		}
 		CatchUtil::compare(outputBuffer, groundBuffer, numSamples);
 	}
 
