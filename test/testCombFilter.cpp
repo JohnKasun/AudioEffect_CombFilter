@@ -100,14 +100,14 @@ TEST_CASE("Correct Output") {
 		CVectorFloat::setZero(inputBuffer, numSamples);
 		SECTION("FIR") {
 			combFilter->init(CombFilterIf::FilterType_t::fir, sampleRate);
-			combFilter->setParam(CombFilterIf::Param_t::delayInSec, 5);
+			combFilter->setParam(CombFilterIf::Param_t::delayInSec, 0.002);
 			combFilter->setParam(CombFilterIf::Param_t::gain, 0.5);
 			combFilter->process(inputBuffer, outputBuffer, numSamples);
 			CatchUtil::compare(inputBuffer, outputBuffer, numSamples);
 		}
 		SECTION("IIR") {
 			combFilter->init(CombFilterIf::FilterType_t::iir, sampleRate);
-			combFilter->setParam(CombFilterIf::Param_t::delayInSec, 5);
+			combFilter->setParam(CombFilterIf::Param_t::delayInSec, 0.002);
 			combFilter->setParam(CombFilterIf::Param_t::gain, 0.5);
 			combFilter->process(inputBuffer, outputBuffer, numSamples);
 			CatchUtil::compare(inputBuffer, outputBuffer, numSamples);
@@ -120,13 +120,13 @@ TEST_CASE("Correct Output") {
 		CSynthesis::generateSine(inputBuffer, 100, sampleRate, numSamples);
 		SECTION("FIR") {
 			combFilter->init(CombFilterIf::FilterType_t::fir, sampleRate);
-			combFilter->setParam(CombFilterIf::Param_t::delayInSec, 5);
+			combFilter->setParam(CombFilterIf::Param_t::delayInSec, 0.002);
 			combFilter->setParam(CombFilterIf::Param_t::gain, 0.5);
 			combFilter->process(inputBuffer, groundBuffer, numSamples);
 			combFilter->reset();
 
 			combFilter->init(CombFilterIf::FilterType_t::fir, sampleRate);
-			combFilter->setParam(CombFilterIf::Param_t::delayInSec, 5);
+			combFilter->setParam(CombFilterIf::Param_t::delayInSec, 0.002);
 			combFilter->setParam(CombFilterIf::Param_t::gain, 0.5);
 
 			std::vector<int> blockSizes{ 1, 10, 100, 546, 23, 320 };
@@ -139,13 +139,13 @@ TEST_CASE("Correct Output") {
 		}
 		SECTION("IIR") {
 			combFilter->init(CombFilterIf::FilterType_t::iir, sampleRate);
-			combFilter->setParam(CombFilterIf::Param_t::delayInSec, 5);
+			combFilter->setParam(CombFilterIf::Param_t::delayInSec, 0.002);
 			combFilter->setParam(CombFilterIf::Param_t::gain, 0.5);
 			combFilter->process(inputBuffer, groundBuffer, numSamples);
 			combFilter->reset();
 
 			combFilter->init(CombFilterIf::FilterType_t::iir, sampleRate);
-			combFilter->setParam(CombFilterIf::Param_t::delayInSec, 5);
+			combFilter->setParam(CombFilterIf::Param_t::delayInSec, 0.002);
 			combFilter->setParam(CombFilterIf::Param_t::gain, 0.5);
 
 			std::vector<int> blockSizes{ 1, 10, 100, 546, 23, 320 };
