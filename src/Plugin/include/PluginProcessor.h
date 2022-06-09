@@ -55,6 +55,7 @@ private:
 
     std::array<CombFilterIf, 2> mCombFilterFir;
     std::array<CombFilterIf, 2> mCombFilterIir;
+    std::array<CombFilterIf, 2>& mCurrentFilter = mCombFilterFir;
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AudioPluginAudioProcessor)
