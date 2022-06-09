@@ -94,26 +94,32 @@ TEST_CASE("Correct Output") {
 		CatchUtil::compare(outputBuffer, groundBuffer, numSamples);
 	}
 
+	SECTION("Zero Input") {
+		const float sampleRate = 44100.0f;
+
+		CVectorFloat::setZero(inputBuffer, numSamples);
+		SECTION("FIR") {
+			combFilter->init(CombFilterIf::FilterType_t::fir, sampleRate);
+			combFilter->setParam(CombFilterIf::Param_t::delayInSec, 5);
+			combFilter->setParam(CombFilterIf::Param_t::gain, 0.5);
+			combFilter->process(inputBuffer, outputBuffer, numSamples);
+			CatchUtil::compare(inputBuffer, outputBuffer, numSamples);
+		}
+		SECTION("IIR") {
+			combFilter->init(CombFilterIf::FilterType_t::iir, sampleRate);
+			combFilter->setParam(CombFilterIf::Param_t::delayInSec, 5);
+			combFilter->setParam(CombFilterIf::Param_t::gain, 0.5);
+			combFilter->process(inputBuffer, outputBuffer, numSamples);
+			CatchUtil::compare(inputBuffer, outputBuffer, numSamples);
+		}
+	}
+
+	SECTION("Varying Input Block Sizes") {
+
+	}
+
 	combFilter.reset();
 	delete[] inputBuffer;
 	delete[] outputBuffer;
 	delete[] groundBuffer;
-}
-
-TEST_CASE("Varying blocks") {
-	SECTION("FIR") {
-		FAIL();
-	}
-	SECTION("IIR") {
-		FAIL();
-	}
-}
-
-TEST_CASE("Zero Input") {
-	SECTION("FIR") {
-		FAIL();
-	}
-	SECTION("IIR") {
-		FAIL();
-	}
 }
