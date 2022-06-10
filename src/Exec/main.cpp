@@ -33,7 +33,7 @@ int main(int argc, char* argv[])
 	float gain{};
 	float delayInSec{};
 
-	if (argc < 6){
+	if (argc != 6){
 		cout << "Incorrect number of arguments!" << endl;
 		return -1;
 	}
