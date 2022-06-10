@@ -14,13 +14,15 @@ AudioPluginAudioProcessor::AudioPluginAudioProcessor()
     mParameters(*this, nullptr, juce::Identifier("Parameters"),
         {
             std::make_unique<juce::AudioParameterFloat>("delay", "Delay", 0.0f, 10.0f, 0.0f),
-            std::make_unique<juce::AudioParameterFloat>("gain", "Gain", -1.0f, 1.0f, 1.0f),
-            std::make_unique<juce::AudioParameterChoice>("type", "Type", juce::StringArray{"FIR", "IIR"}, 0)
+            std::make_unique<juce::AudioParameterFloat>("gain", "Gain", 0.0f, 1.0f, 1.0f),
+            std::make_unique<juce::AudioParameterChoice>("type", "Type", juce::StringArray{"FIR", "IIR"}, 0),
+            std::make_unique<juce::AudioParameterBool>("invert gain", "Invert Gain", false)
         })
 {
     mDelayParam = mParameters.getRawParameterValue("delay");
     mGainParam = mParameters.getRawParameterValue("gain");
     mFilterType = mParameters.getRawParameterValue("type");
+    mInvertGainParam = mParameters.getRawParameterValue("invert gain");
 }
 
 AudioPluginAudioProcessor::~AudioPluginAudioProcessor()
@@ -140,11 +142,12 @@ void AudioPluginAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
 
     juce::ScopedNoDenormals noDenormals;
 
+    float phase = static_cast<bool>(*mInvertGainParam) ? -1.0f : 1.0f;
     for (int i = 0; i < mCombFilterFir.size(); i++) {
         mCombFilterFir.at(i).setParam(CombFilterIf::Param_t::delayInSec, *mDelayParam);
-        mCombFilterFir.at(i).setParam(CombFilterIf::Param_t::gain, *mGainParam);
+        mCombFilterFir.at(i).setParam(CombFilterIf::Param_t::gain, phase * *mGainParam);
         mCombFilterIir.at(i).setParam(CombFilterIf::Param_t::delayInSec, *mDelayParam);
-        mCombFilterIir.at(i).setParam(CombFilterIf::Param_t::gain, *mGainParam);
+        mCombFilterIir.at(i).setParam(CombFilterIf::Param_t::gain, phase * *mGainParam);
     }
 
     switch (static_cast<int>(*mFilterType)) {

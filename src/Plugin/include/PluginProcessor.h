@@ -53,6 +53,7 @@ private:
     std::atomic<float>* mDelayParam = nullptr;
     std::atomic<float>* mGainParam = nullptr;
     std::atomic<float>* mFilterType = nullptr;
+    std::atomic<float>* mInvertGainParam = nullptr;
 
     std::array<CombFilterIf, 2> mCombFilterFir;
     std::array<CombFilterIf, 2> mCombFilterIir;
