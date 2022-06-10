@@ -14,11 +14,13 @@ AudioPluginAudioProcessor::AudioPluginAudioProcessor()
     mParameters(*this, nullptr, juce::Identifier("Parameters"),
         {
             std::make_unique<juce::AudioParameterFloat>("delay", "Delay", 0.0f, 10.0f, 0.0f),
-            std::make_unique<juce::AudioParameterFloat>("gain", "Gain", -1.0f, 1.0f, 1.0f)
+            std::make_unique<juce::AudioParameterFloat>("gain", "Gain", -1.0f, 1.0f, 1.0f),
+            std::make_unique<juce::AudioParameterChoice>("type", "Type", juce::StringArray{"FIR", "IIR"}, 0)
         })
 {
     mDelayParam = mParameters.getRawParameterValue("delay");
     mGainParam = mParameters.getRawParameterValue("gain");
+    mFilterType = mParameters.getRawParameterValue("type");
 }
 
 AudioPluginAudioProcessor::~AudioPluginAudioProcessor()
@@ -94,16 +96,16 @@ void AudioPluginAudioProcessor::changeProgramName(int index, const juce::String&
 void AudioPluginAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
     for (int i = 0; i < mCombFilterFir.size(); i++) {
-        mCombFilterFir[i].init(CombFilterIf::FilterType_t::fir, sampleRate);
-        mCombFilterIir[i].init(CombFilterIf::FilterType_t::iir, sampleRate);
+        mCombFilterFir.at(i).init(CombFilterIf::FilterType_t::fir, sampleRate);
+        mCombFilterIir.at(i).init(CombFilterIf::FilterType_t::iir, sampleRate);
     }
 }
 
 void AudioPluginAudioProcessor::releaseResources()
 {
     for (int i = 0; i < mCombFilterFir.size(); i++) {
-        mCombFilterFir[i].reset();
-        mCombFilterIir[i].reset();
+        mCombFilterFir.at(i).reset();
+        mCombFilterIir.at(i).reset();
     }
 }
 
@@ -139,14 +141,41 @@ void AudioPluginAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
     juce::ScopedNoDenormals noDenormals;
 
     for (int i = 0; i < mCombFilterFir.size(); i++) {
-        mCombFilterFir[i].setParam(CombFilterIf::Param_t::delayInSec, *mDelayParam);
-        mCombFilterFir[i].setParam(CombFilterIf::Param_t::gain, *mGainParam);
-        mCombFilterIir[i].setParam(CombFilterIf::Param_t::delayInSec, *mDelayParam);
-        mCombFilterIir[i].setParam(CombFilterIf::Param_t::gain, *mGainParam);
+        mCombFilterFir.at(i).setParam(CombFilterIf::Param_t::delayInSec, *mDelayParam);
+        mCombFilterFir.at(i).setParam(CombFilterIf::Param_t::gain, *mGainParam);
+        mCombFilterIir.at(i).setParam(CombFilterIf::Param_t::delayInSec, *mDelayParam);
+        mCombFilterIir.at(i).setParam(CombFilterIf::Param_t::gain, *mGainParam);
+    }
+
+    switch (static_cast<int>(*mFilterType)) {
+    case CombFilterIf::FilterType_t::fir:
+        mCurrentFilter = mCombFilterFir;
+        break;
+    case CombFilterIf::FilterType_t::iir:
+        mCurrentFilter = mCombFilterIir;
+        break;
+    default:
+        ;
     }
 
     if (getNumOutputChannels() <= 0)
         buffer.clear();
+
+    switch (getNumInputChannels()) {
+    case 1:
+        mCurrentFilter.at(0).process(buffer.getReadPointer(0), buffer.getWritePointer(0), buffer.getNumSamples());
+        for (int c = 1; c < getNumOutputChannels(); c++) {
+            buffer.copyFrom(0, 0, buffer.getWritePointer(c), buffer.getNumSamples());
+        }
+        break;
+    case 2:
+        for (int c = 0; c < getNumOutputChannels(); c++) {
+            mCurrentFilter.at(c).process(buffer.getReadPointer(c), buffer.getWritePointer(c), buffer.getNumSamples());
+        }
+        break;
+    default:
+        buffer.clear();
+    }
 }
 
 //==============================================================================
