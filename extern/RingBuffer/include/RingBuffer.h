@@ -140,6 +140,14 @@ public:
             std::memcpy (&ptBuff[iNumValues2End], m_ptBuff, sizeof(T)*(iLength - iNumValues2End));
     }
 
+    T extractPostInc()
+    {
+        T value = get();
+        m_ptBuff[m_iReadIdx] = 0;
+        incIdx(m_iReadIdx);
+        return value;
+    }
+
     /*! set buffer content and indices to 0
     \return void
     */
