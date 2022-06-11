@@ -67,13 +67,12 @@ int main(int argc, char* argv[])
 
 	// Create instance
 	for (int c = 0; c < fileSpec.iNumChannels; c++) {
-		combFilter.emplace_back(new CombFilter());
+		combFilter.emplace_back(new CombFilter(fileSpec.fSampleRateInHz));
 	}
 
 	// Initialize instance
 	for (int c = 0; c < combFilter.size(); c++) {
-		if (combFilter[c]->init(fileSpec.fSampleRateInHz) != Error_t::kNoError
-			|| combFilter[c]->setFilterType(filterType) != Error_t::kNoError
+		if (   combFilter[c]->setFilterType(filterType) != Error_t::kNoError
 			|| combFilter[c]->setParam(CombFilter::Param_t::gain, gain) != Error_t::kNoError
 			|| combFilter[c]->setParam(CombFilter::Param_t::delayInSec, delayInSec) != Error_t::kNoError) {
 			std::cout << "Invalid Parameters..." << std::endl;

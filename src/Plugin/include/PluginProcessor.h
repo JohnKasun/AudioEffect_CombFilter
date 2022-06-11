@@ -55,7 +55,7 @@ private:
     std::atomic<float>* mFilterType = nullptr;
     std::atomic<float>* mInvertGainParam = nullptr;
 
-    std::array<CombFilter, 2> mCombFilter;
+    std::array<std::unique_ptr<CombFilter>, 2> mCombFilter;
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AudioPluginAudioProcessor)

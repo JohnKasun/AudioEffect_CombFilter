@@ -97,14 +97,14 @@ void AudioPluginAudioProcessor::changeProgramName(int index, const juce::String&
 //==============================================================================
 void AudioPluginAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
-    for (CombFilter& combFilter : mCombFilter) {
-        combFilter.init(sampleRate);
+    for (std::unique_ptr<CombFilter>& combFilter : mCombFilter) {
+        combFilter.reset(new CombFilter(sampleRate));
     }
 }
 
 void AudioPluginAudioProcessor::releaseResources()
 {
-    for (CombFilter& combFilter : mCombFilter) {
+    for (std::unique_ptr<CombFilter>& combFilter : mCombFilter) {
         combFilter.reset();
     }
 }
@@ -141,10 +141,10 @@ void AudioPluginAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
     juce::ScopedNoDenormals noDenormals;
 
     float phase = static_cast<bool>(*mInvertGainParam) ? -1.0f : 1.0f;
-    for (CombFilter& combFilter : mCombFilter) {
-        combFilter.setParam(CombFilter::Param_t::delayInSec, *mDelayParam);
-        combFilter.setParam(CombFilter::Param_t::gain, phase * *mGainParam);
-        combFilter.setFilterType(static_cast<CombFilter::FilterType_t>(*mFilterType - 1));
+    for (std::unique_ptr<CombFilter>& combFilter : mCombFilter) {
+        combFilter->setParam(CombFilter::Param_t::delayInSec, *mDelayParam);
+        combFilter->setParam(CombFilter::Param_t::gain, phase * *mGainParam);
+        combFilter->setFilterType(static_cast<CombFilter::FilterType_t>(*mFilterType - 1));
     }
 
     if (getNumOutputChannels() <= 0)
@@ -152,14 +152,14 @@ void AudioPluginAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
 
     switch (getNumInputChannels()) {
     case 1:
-        mCombFilter.at(0).process(buffer.getReadPointer(0), buffer.getWritePointer(0), buffer.getNumSamples());
+        mCombFilter.at(0)->process(buffer.getReadPointer(0), buffer.getWritePointer(0), buffer.getNumSamples());
         for (int c = 1; c < getNumOutputChannels(); c++) {
             buffer.copyFrom(0, 0, buffer.getWritePointer(c), buffer.getNumSamples());
         }
         break;
     case 2:
         for (int c = 0; c < getNumOutputChannels(); c++) {
-            mCombFilter.at(c).process(buffer.getReadPointer(c), buffer.getWritePointer(c), buffer.getNumSamples());
+            mCombFilter.at(c)->process(buffer.getReadPointer(c), buffer.getWritePointer(c), buffer.getNumSamples());
         }
         break;
     default:

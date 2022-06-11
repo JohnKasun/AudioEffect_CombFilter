@@ -9,9 +9,7 @@
 
 TEST_CASE("Error Checking") {
 	std::unique_ptr<CombFilter> combFilter;
-	combFilter.reset(new CombFilter());
-	REQUIRE(combFilter->init(-1.0f) == Error_t::kFunctionInvalidArgsError);
-	REQUIRE(combFilter->init(44100.0f) == Error_t::kNoError);
+	combFilter.reset(new CombFilter(44100.0f));
 	REQUIRE(combFilter->setFilterType(CombFilter::FilterType_t::fir) == Error_t::kNoError);
 	REQUIRE(combFilter->setFilterType(CombFilter::FilterType_t::iir) == Error_t::kNoError);
 	REQUIRE(combFilter->setFilterType(CombFilter::FilterType_t::numFilterTypes) == Error_t::kFunctionInvalidArgsError);
@@ -32,8 +30,6 @@ TEST_CASE("Error Checking") {
 	inputBuffer = new float[numSamples] {};
 	REQUIRE(combFilter->process(inputBuffer, outputBuffer, -1.0f) == Error_t::kFunctionInvalidArgsError);
 	REQUIRE(combFilter->process(inputBuffer, outputBuffer, numSamples) == Error_t::kNoError);
-	combFilter->reset();
-	REQUIRE(combFilter->process(inputBuffer, outputBuffer, numSamples) == Error_t::kNotInitializedError);
 	delete[] inputBuffer;
 	delete[] outputBuffer;
 	inputBuffer = nullptr;
@@ -49,12 +45,10 @@ TEST_CASE("Correct Output") {
 	const int numSamples = 10000;
 	const float sampleRate = 44100.0f;
 
-	combFilter.reset(new CombFilter());
+	combFilter.reset(new CombFilter(sampleRate));
 	inputBuffer = new float[numSamples] {};
 	outputBuffer = new float[numSamples] {};
 	groundBuffer = new float[numSamples] {};
-
-	combFilter->init(sampleRate);
 
 	SECTION("Feedforward") {
 		const float freq = 1.0f;
@@ -116,9 +110,8 @@ TEST_CASE("Correct Output") {
 			combFilter->setParam(CombFilter::Param_t::delayInSec, 0.002);
 			combFilter->setParam(CombFilter::Param_t::gain, 0.5);
 			combFilter->process(inputBuffer, groundBuffer, numSamples);
-			combFilter->reset();
 
-			combFilter->init(sampleRate);
+			combFilter.reset(new CombFilter(sampleRate));
 			combFilter->setFilterType(CombFilter::FilterType_t::fir);
 			combFilter->setParam(CombFilter::Param_t::delayInSec, 0.002);
 			combFilter->setParam(CombFilter::Param_t::gain, 0.5);
@@ -136,9 +129,8 @@ TEST_CASE("Correct Output") {
 			combFilter->setParam(CombFilter::Param_t::delayInSec, 0.002);
 			combFilter->setParam(CombFilter::Param_t::gain, 0.5);
 			combFilter->process(inputBuffer, groundBuffer, numSamples);
-			combFilter->reset();
 
-			combFilter->init(sampleRate);
+			combFilter.reset(new CombFilter(sampleRate));
 			combFilter->setFilterType(CombFilter::FilterType_t::iir);
 			combFilter->setParam(CombFilter::Param_t::delayInSec, 0.002);
 			combFilter->setParam(CombFilter::Param_t::gain, 0.5);

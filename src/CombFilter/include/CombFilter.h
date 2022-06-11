@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <assert.h>
 
 #include "ErrorDef.h"
 #include "RingBuffer.h"
@@ -23,11 +24,8 @@ public:
 		numParams
 	};
 
-	CombFilter();
+	CombFilter(float sampleRate);
 	~CombFilter();
-
-	Error_t init(float sampleRate);
-	Error_t reset();
 	
 	Error_t setParam(CombFilter::Param_t param, float value);
 	float getParam(CombFilter::Param_t param) const;
@@ -41,8 +39,8 @@ private:
 	float mParamRanges[CombFilter::Param_t::numParams][2]{};
 	float mParamValues[CombFilter::Param_t::numParams]{};
 
-	FilterType_t mFilterType = fir;
-	std::unique_ptr<CRingBuffer<float>> mDelayLine = nullptr;
-	float mSampleRate = 44100.0f;
-	bool mIsInitialized = false;
+	float mSampleRate;
+	FilterType_t mFilterType;
+	std::unique_ptr<CRingBuffer<float>> mDelayLine;
+
 };
