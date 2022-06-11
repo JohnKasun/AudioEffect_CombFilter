@@ -7,7 +7,7 @@
 
 #include "AudioFileIf.h"
 #include "ErrorDef.h"
-#include "CombFilterIf.h"
+#include "CombFilter.h"
 
 using std::string;
 using std::vector;
@@ -25,11 +25,11 @@ int main(int argc, char* argv[])
 
 	float** inputAudioData  = nullptr;
 	float** outputAudioData = nullptr;
-	std::vector<std::unique_ptr<CombFilterIf>> combFilter;
+	std::vector<std::unique_ptr<CombFilter>> combFilter;
 
 	string inputFilePath{};
 	string outputFilePath{};
-	CombFilterIf::FilterType_t filterType{};
+	CombFilter::FilterType_t filterType{};
 	float gain{};
 	float delayInSec{};
 
@@ -41,9 +41,9 @@ int main(int argc, char* argv[])
 	inputFilePath  = argv[1];
 	outputFilePath = argv[2];
 	if (argv[3] == "fir")
-		filterType = CombFilterIf::FilterType_t::fir;
+		filterType = CombFilter::FilterType_t::fir;
 	else if (argv[3] == "iir")
-		filterType = CombFilterIf::FilterType_t::iir;
+		filterType = CombFilter::FilterType_t::iir;
 	gain = atof(argv[4]);
 	delayInSec = atof(argv[5]);
 
@@ -67,7 +67,7 @@ int main(int argc, char* argv[])
 
 	// Create instance
 	for (int c = 0; c < fileSpec.iNumChannels; c++) {
-		combFilter.emplace_back(new CombFilterIf());
+		combFilter.emplace_back(new CombFilter());
 	}
 
 	// Initialize instance
