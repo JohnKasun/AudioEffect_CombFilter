@@ -15,7 +15,7 @@ AudioPluginAudioProcessor::AudioPluginAudioProcessor()
         {
             std::make_unique<juce::AudioParameterFloat>("delay", "Delay", 0.0f, 10.0f, 0.0f),
             std::make_unique<juce::AudioParameterFloat>("gain", "Gain", 0.0f, 1.0f, 1.0f),
-            std::make_unique<juce::AudioParameterChoice>("type", "Type", juce::StringArray{"FIR", "IIR"}, 0),
+            std::make_unique<juce::AudioParameterFloat>("type", "Type", 1.0f, 2.0f, 1.0f),
             std::make_unique<juce::AudioParameterBool>("invert gain", "Invert Gain", false)
         })
 {
@@ -150,12 +150,12 @@ void AudioPluginAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
         mCombFilterIir.at(i).setParam(CombFilterIf::Param_t::gain, phase * *mGainParam);
     }
 
-    switch (static_cast<int>(*mFilterType)) {
+    switch (static_cast<int>(*mFilterType) - 1) {
     case CombFilterIf::FilterType_t::fir:
-        mCurrentFilter = mCombFilterFir;
+        mCurrentFilter = &mCombFilterFir;
         break;
     case CombFilterIf::FilterType_t::iir:
-        mCurrentFilter = mCombFilterIir;
+        mCurrentFilter = &mCombFilterIir;
         break;
     default:
         ;
@@ -166,14 +166,14 @@ void AudioPluginAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
 
     switch (getNumInputChannels()) {
     case 1:
-        mCurrentFilter.at(0).process(buffer.getReadPointer(0), buffer.getWritePointer(0), buffer.getNumSamples());
+        mCurrentFilter->at(0).process(buffer.getReadPointer(0), buffer.getWritePointer(0), buffer.getNumSamples());
         for (int c = 1; c < getNumOutputChannels(); c++) {
             buffer.copyFrom(0, 0, buffer.getWritePointer(c), buffer.getNumSamples());
         }
         break;
     case 2:
         for (int c = 0; c < getNumOutputChannels(); c++) {
-            mCurrentFilter.at(c).process(buffer.getReadPointer(c), buffer.getWritePointer(c), buffer.getNumSamples());
+            mCurrentFilter->at(c).process(buffer.getReadPointer(c), buffer.getWritePointer(c), buffer.getNumSamples());
         }
         break;
     default:

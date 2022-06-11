@@ -12,6 +12,7 @@ CombFilterIf::CombFilterIf()
 
 CombFilterIf::~CombFilterIf()
 {
+	reset();
 }
 
 Error_t CombFilterIf::init(FilterType_t filterType, float sampleRate)
