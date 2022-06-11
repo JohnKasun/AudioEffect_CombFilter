@@ -28,12 +28,16 @@ Error_t CombFilter::init(float sampleRate)
 
 Error_t CombFilter::reset()
 {
-	for (int i = 0; i < numParams; i++) {
-		mParamValues[i] = 0.0f;
+	if (mIsInitialized) {
+		for (int i = 0; i < numParams; i++) {
+			mParamValues[i] = 0.0f;
+		}
+		mFilterType = fir;
+		mSampleRate = 44100.0f;
+		mDelayLine.reset();
+		mIsInitialized = false;
 	}
-	mFilterType = fir;
-	mSampleRate = 44100.0f;
-	mDelayLine.reset();
+	return Error_t::kNoError;
 }
 
 Error_t CombFilter::setParam(CombFilter::Param_t param, float value)

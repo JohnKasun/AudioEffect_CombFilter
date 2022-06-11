@@ -4,7 +4,7 @@
 #include <array>
 
 #include "ErrorDef.h"
-#include "CombFilterIf.h"
+#include "CombFilter.h"
 
 //==============================================================================
 class AudioPluginAudioProcessor : public juce::AudioProcessor
@@ -55,9 +55,7 @@ private:
     std::atomic<float>* mFilterType = nullptr;
     std::atomic<float>* mInvertGainParam = nullptr;
 
-    std::array<CombFilterIf, 2> mCombFilterFir;
-    std::array<CombFilterIf, 2> mCombFilterIir;
-    std::array<CombFilterIf, 2>* mCurrentFilter = &mCombFilterFir;
+    std::array<CombFilter, 2> mCombFilter;
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AudioPluginAudioProcessor)

@@ -97,17 +97,15 @@ void AudioPluginAudioProcessor::changeProgramName(int index, const juce::String&
 //==============================================================================
 void AudioPluginAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
-    for (int i = 0; i < mCombFilterFir.size(); i++) {
-        mCombFilterFir.at(i).init(CombFilterIf::FilterType_t::fir, sampleRate);
-        mCombFilterIir.at(i).init(CombFilterIf::FilterType_t::iir, sampleRate);
+    for (CombFilter& combFilter : mCombFilter) {
+        combFilter.init(sampleRate);
     }
 }
 
 void AudioPluginAudioProcessor::releaseResources()
 {
-    for (int i = 0; i < mCombFilterFir.size(); i++) {
-        mCombFilterFir.at(i).reset();
-        mCombFilterIir.at(i).reset();
+    for (CombFilter& combFilter : mCombFilter) {
+        combFilter.reset();
     }
 }
 
@@ -143,22 +141,10 @@ void AudioPluginAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
     juce::ScopedNoDenormals noDenormals;
 
     float phase = static_cast<bool>(*mInvertGainParam) ? -1.0f : 1.0f;
-    for (int i = 0; i < mCombFilterFir.size(); i++) {
-        mCombFilterFir.at(i).setParam(CombFilterIf::Param_t::delayInSec, *mDelayParam);
-        mCombFilterFir.at(i).setParam(CombFilterIf::Param_t::gain, phase * *mGainParam);
-        mCombFilterIir.at(i).setParam(CombFilterIf::Param_t::delayInSec, *mDelayParam);
-        mCombFilterIir.at(i).setParam(CombFilterIf::Param_t::gain, phase * *mGainParam);
-    }
-
-    switch (static_cast<int>(*mFilterType) - 1) {
-    case CombFilterIf::FilterType_t::fir:
-        mCurrentFilter = &mCombFilterFir;
-        break;
-    case CombFilterIf::FilterType_t::iir:
-        mCurrentFilter = &mCombFilterIir;
-        break;
-    default:
-        ;
+    for (CombFilter& combFilter : mCombFilter) {
+        combFilter.setParam(CombFilter::Param_t::delayInSec, *mDelayParam);
+        combFilter.setParam(CombFilter::Param_t::gain, phase * *mGainParam);
+        combFilter.setFilterType(static_cast<CombFilter::FilterType_t>(*mFilterType - 1));
     }
 
     if (getNumOutputChannels() <= 0)
@@ -166,14 +152,14 @@ void AudioPluginAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
 
     switch (getNumInputChannels()) {
     case 1:
-        mCurrentFilter->at(0).process(buffer.getReadPointer(0), buffer.getWritePointer(0), buffer.getNumSamples());
+        mCombFilter.at(0).process(buffer.getReadPointer(0), buffer.getWritePointer(0), buffer.getNumSamples());
         for (int c = 1; c < getNumOutputChannels(); c++) {
             buffer.copyFrom(0, 0, buffer.getWritePointer(c), buffer.getNumSamples());
         }
         break;
     case 2:
         for (int c = 0; c < getNumOutputChannels(); c++) {
-            mCurrentFilter->at(c).process(buffer.getReadPointer(c), buffer.getWritePointer(c), buffer.getNumSamples());
+            mCombFilter.at(c).process(buffer.getReadPointer(c), buffer.getWritePointer(c), buffer.getNumSamples());
         }
         break;
     default:
