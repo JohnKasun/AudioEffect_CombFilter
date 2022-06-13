@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iostream>
+#include <iomanip>
 #include <string>
 #include <memory>
 #include <vector>
@@ -40,10 +41,14 @@ int main(int argc, char* argv[])
 	
 	inputFilePath  = argv[1];
 	outputFilePath = argv[2];
-	if (argv[3] == "fir")
+	if (strcmpi(argv[3], "fir"))
 		filterType = CombFilter::FilterType_t::fir;
-	else if (argv[3] == "iir")
+	else if (strcmpi(argv[3], "iir"))
 		filterType = CombFilter::FilterType_t::iir;
+	else {
+		cout << "Invalid filter type..." << endl;
+		return -1;
+	}
 	gain = atof(argv[4]);
 	delayInSec = atof(argv[5]);
 
@@ -76,6 +81,10 @@ int main(int argc, char* argv[])
 			|| combFilter[c]->setParam(CombFilter::Param_t::gain, gain) != Error_t::kNoError
 			|| combFilter[c]->setParam(CombFilter::Param_t::delayInSec, delayInSec) != Error_t::kNoError) {
 			std::cout << "Invalid Parameters..." << std::endl;
+			std::cout << "The Ranges for the parameters are as follows: " << endl;
+			std::cout << "\tFilter Type: 'fir' or 'iir'" << endl;
+			cout << "\tGain: -1 to 1" << endl;
+			cout << "\tDelay: 0.01 to 0.1" << endl;
 			combFilter[c].reset();
 			CAudioFileIf::destroy(audioFileOut);
 			CAudioFileIf::destroy(audioFileIn);

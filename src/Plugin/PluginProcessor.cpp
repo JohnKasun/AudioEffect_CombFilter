@@ -13,7 +13,7 @@ AudioPluginAudioProcessor::AudioPluginAudioProcessor()
     ),
     mParameters(*this, nullptr, juce::Identifier("Parameters"),
         {
-            std::make_unique<juce::AudioParameterFloat>("delay", "Delay", juce::NormalisableRange<float>(0.0f, 0.1f), 0.05f),
+            std::make_unique<juce::AudioParameterFloat>("delay", "Delay", juce::NormalisableRange<float>(0.01f, 0.1f), 0.05f),
             std::make_unique<juce::AudioParameterFloat>("gain", "Gain", 0.0f, 1.0f, 0.5f),
             std::make_unique<juce::AudioParameterFloat>("type", "Type", 1.0f, 2.0f, 1.0f),
             std::make_unique<juce::AudioParameterBool>("invert gain", "Invert Gain", false)
@@ -23,8 +23,6 @@ AudioPluginAudioProcessor::AudioPluginAudioProcessor()
     mGainParam = mParameters.getRawParameterValue("gain");
     mFilterType = mParameters.getRawParameterValue("type");
     mInvertGainParam = mParameters.getRawParameterValue("invert gain");
-
-
 }
 
 AudioPluginAudioProcessor::~AudioPluginAudioProcessor()

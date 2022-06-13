@@ -10,16 +10,20 @@
 TEST_CASE("Error Checking") {
 	std::unique_ptr<CombFilter> combFilter;
 	combFilter.reset(new CombFilter(44100.0f));
-	REQUIRE(combFilter->setFilterType(CombFilter::FilterType_t::fir) == Error_t::kNoError);
-	REQUIRE(combFilter->setFilterType(CombFilter::FilterType_t::iir) == Error_t::kNoError);
 	REQUIRE(combFilter->setFilterType(CombFilter::FilterType_t::numFilterTypes) == Error_t::kFunctionInvalidArgsError);
+	SECTION("FIR") {
+		REQUIRE(combFilter->setFilterType(CombFilter::FilterType_t::fir) == Error_t::kNoError);
+	}
+	SECTION("IIR") {
+		REQUIRE(combFilter->setFilterType(CombFilter::FilterType_t::iir) == Error_t::kNoError);
+	}
 	REQUIRE(combFilter->setParam(CombFilter::Param_t::gain, -1.1f) == Error_t::kFunctionInvalidArgsError);
 	REQUIRE(combFilter->setParam(CombFilter::Param_t::gain, 1.1f) == Error_t::kFunctionInvalidArgsError);
 	REQUIRE(combFilter->setParam(CombFilter::Param_t::gain, 0.5f) == Error_t::kNoError);
 	REQUIRE(combFilter->setParam(CombFilter::Param_t::delayInSec, 11.0f) == Error_t::kFunctionInvalidArgsError);
 	REQUIRE(combFilter->setParam(CombFilter::Param_t::delayInSec, -4.0f) == Error_t::kFunctionInvalidArgsError);
-	REQUIRE(combFilter->setParam(CombFilter::Param_t::delayInSec, 0.2f) == Error_t::kNoError);
-	REQUIRE(combFilter->getParam(CombFilter::Param_t::delayInSec) == 0.2f);
+	REQUIRE(combFilter->setParam(CombFilter::Param_t::delayInSec, 0.1f) == Error_t::kNoError);
+	REQUIRE(combFilter->getParam(CombFilter::Param_t::delayInSec) == 0.1f);
 	REQUIRE(combFilter->getParam(CombFilter::Param_t::gain) == 0.5f);
 	
 	int numSamples = 100;
