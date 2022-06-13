@@ -67,12 +67,12 @@ Error_t CombFilter::process(const float* inputBuffer, float* outputBuffer, int n
 	case fir:
 		for (int i = 0; i < numSamples; i++) {
 			mDelayLine->putPostInc(inputBuffer[i]);
-			outputBuffer[i] = inputBuffer[i] + mParamValues[CombFilter::Param_t::gain] * mDelayLine->getPostInc();
+			outputBuffer[i] = inputBuffer[i] + mParamValues[CombFilter::Param_t::gain] * mDelayLine->extractPostInc();
 		}
 		break;
 	case iir:
 		for (int i = 0; i < numSamples; i++) {
-			outputBuffer[i] = inputBuffer[i] + mParamValues[CombFilter::Param_t::gain] * mDelayLine->getPostInc();
+			outputBuffer[i] = inputBuffer[i] + mParamValues[CombFilter::Param_t::gain] * mDelayLine->extractPostInc();
 			mDelayLine->putPostInc(outputBuffer[i]);
 		}
 		break;
