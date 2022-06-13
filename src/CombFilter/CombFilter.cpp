@@ -24,14 +24,7 @@ Error_t CombFilter::setParam(CombFilter::Param_t param, float value)
 		return Error_t::kFunctionInvalidArgsError;
 
 	if (param == CombFilter::Param_t::delayInSec) {
-		if (value < mParamValues[delayInSec]) {
-			mDelayLine->setWriteIdx(mDelayLine->getReadIdx() + CUtil::float2int<int>(value * mSampleRate));
-		}
-		else if (value > mParamValues[delayInSec]) {
-			int numAdditionalTaps = CUtil::float2int<int>(value * mSampleRate) - CUtil::float2int<int>(mParamValues[delayInSec] * mSampleRate);
-			while(numAdditionalTaps--)
-				mDelayLine->putPostInc(0.0f);
-		}
+		mDelayLine->setReadIdx(mDelayLine->getWriteIdx() - CUtil::float2int<int>(value * mSampleRate));
 	}
 	mParamValues[param] = value;
 	return Error_t::kNoError;
@@ -67,12 +60,12 @@ Error_t CombFilter::process(const float* inputBuffer, float* outputBuffer, int n
 	case fir:
 		for (int i = 0; i < numSamples; i++) {
 			mDelayLine->putPostInc(inputBuffer[i]);
-			outputBuffer[i] = inputBuffer[i] + mParamValues[CombFilter::Param_t::gain] * mDelayLine->extractPostInc();
+			outputBuffer[i] = inputBuffer[i] + mParamValues[CombFilter::Param_t::gain] * mDelayLine->getPostInc();
 		}
 		break;
 	case iir:
 		for (int i = 0; i < numSamples; i++) {
-			outputBuffer[i] = inputBuffer[i] + mParamValues[CombFilter::Param_t::gain] * mDelayLine->extractPostInc();
+			outputBuffer[i] = inputBuffer[i] + mParamValues[CombFilter::Param_t::gain] * mDelayLine->getPostInc();
 			mDelayLine->putPostInc(outputBuffer[i]);
 		}
 		break;
