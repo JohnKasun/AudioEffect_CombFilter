@@ -38,7 +38,8 @@ int main(int argc, char* argv[])
 		cout << "-- CombFilter Effect -- " << endl;
 		cout << endl;
 
-		cout << std::setw(20) << std::right << "Enter a path to a WAV file: ";
+		const int labelFormat = 30;
+		cout << std::setw(labelFormat) << std::right << "Input WAV file: ";
 		std::cin >> inputFilePath;
 		CAudioFileIf::create(audioFileIn);
 		audioFileIn->openFile(inputFilePath, CAudioFileIf::FileIoType_t::kFileRead);
@@ -49,10 +50,10 @@ int main(int argc, char* argv[])
 		}
 		audioFileIn->getFileSpec(fileSpec);
 
-		cout << std::setw(20) << "Enter a path to a WAV file: ";
+		cout << std::setw(labelFormat) << "Output WAV file: ";
 		std::cin >> outputFilePath;
 		CAudioFileIf::create(audioFileOut);
-		audioFileOut->openFile(outputFilePath, CAudioFileIf::FileIoType_t::kFileWrite);
+		audioFileOut->openFile(outputFilePath, CAudioFileIf::FileIoType_t::kFileWrite, &fileSpec);
 		if (!audioFileOut->isOpen()) {
 			cout << "Couldn't open output file..." << endl;
 			CAudioFileIf::destroy(audioFileIn);
@@ -64,13 +65,16 @@ int main(int argc, char* argv[])
 			combFilter.emplace_back(new CombFilter(fileSpec.fSampleRateInHz));
 		}
 
-		cout << std::setw(20) << "Enter a filter type (fir or iir): ";
+		cout << std::setw(labelFormat) << "Filter Type (fir or iir): ";
 		string filterInput;
 		std::cin >> filterInput;
-		if (strcmpi(filterInput.c_str(), "fir"))
+		CUtil::toLower(filterInput);
+		if (filterInput == "fir") {
 			filterType = CombFilter::FilterType_t::fir;
-		else if (strcmpi(filterInput.c_str(), "iir"))
+		}
+		else if (filterInput == "iir") {
 			filterType = CombFilter::FilterType_t::iir;
+		}
 		else {
 			cout << "Invalid filter type..." << endl;
 			CAudioFileIf::destroy(audioFileIn);
@@ -81,7 +85,7 @@ int main(int argc, char* argv[])
 			combFilter[c]->setFilterType(filterType);
 		}
 
-		cout << std::setw(20) << "Enter a gain parameter (-1.0 - 1.0): ";
+		cout << std::setw(labelFormat) << "Gain (-1.0 - 1.0): ";
 		std::cin >> gain;
 		for (int c = 0; c < fileSpec.iNumChannels; c++) {
 			if (combFilter[c]->setParam(CombFilter::gain, gain) != Error_t::kNoError) {
@@ -92,10 +96,10 @@ int main(int argc, char* argv[])
 			}
 		}
 
-		cout << std::setw(20) << "Enter a delay parameter in seconds (0.01 - 10.0): ";
+		cout << std::setw(labelFormat) << "Delay (0.01 - 10.0): ";
 		std::cin >> delayInSec;
 		for (int c = 0; c < fileSpec.iNumChannels; c++) {
-			if (combFilter[c]->setParam(CombFilter::delayInSec, gain) != Error_t::kNoError) {
+			if (combFilter[c]->setParam(CombFilter::delayInSec, delayInSec) != Error_t::kNoError) {
 				cout << "Invalid parameter value..." << endl;
 				CAudioFileIf::destroy(audioFileIn);
 				CAudioFileIf::destroy(audioFileOut);
@@ -107,10 +111,14 @@ int main(int argc, char* argv[])
 	else if (argc == 6) {
 		inputFilePath = argv[1];
 		outputFilePath = argv[2];
-		if (strcmpi(argv[3], "fir"))
+		string filterInput = argv[3];
+		CUtil::toLower(filterInput);
+		if (filterInput == "fir") {
 			filterType = CombFilter::FilterType_t::fir;
-		else if (strcmpi(argv[3], "iir"))
+		}
+		else if (filterInput == "iir") {
 			filterType = CombFilter::FilterType_t::iir;
+		}
 		else {
 			cout << "Invalid filter type..." << endl;
 			return -1;
@@ -132,6 +140,7 @@ int main(int argc, char* argv[])
 		audioFileOut->openFile(outputFilePath, CAudioFileIf::FileIoType_t::kFileWrite, &fileSpec);
 		if (!audioFileOut->isOpen()) {
 			cout << "Couldn't open output file..." << endl;
+			CAudioFileIf::destroy(audioFileIn);
 			CAudioFileIf::destroy(audioFileOut);
 			return -1;
 		}
@@ -151,7 +160,6 @@ int main(int argc, char* argv[])
 				cout << "\tFilter Type: 'fir' or 'iir'" << endl;
 				cout << "\tGain: -1 to 1" << endl;
 				cout << "\tDelay: 0.01 to 10.0" << endl;
-				combFilter[c].reset();
 				CAudioFileIf::destroy(audioFileOut);
 				CAudioFileIf::destroy(audioFileIn);
 				return -1;
@@ -182,6 +190,9 @@ int main(int argc, char* argv[])
 		audioFileOut->writeData(outputAudioData, iNumFrames);
 	}
 
+	cout << endl;
+	cout << "Done" << endl;
+
 	// Clean-up
 	for (int c = 0; c < fileSpec.iNumChannels; c++) {
 		delete[] inputAudioData[c];
@@ -192,7 +203,6 @@ int main(int argc, char* argv[])
 
 	CAudioFileIf::destroy(audioFileOut);
 	CAudioFileIf::destroy(audioFileOut);
-	combFilter.clear();
 
 	return 0;
 }
