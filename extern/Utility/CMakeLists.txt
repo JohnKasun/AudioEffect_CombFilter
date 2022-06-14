@@ -4,6 +4,7 @@ add_library(Utility
         include/ErrorDef.h
         include/Vector.h
         include/Synthesis.h
+        include/Exception.h
 )
 
 target_include_directories(Utility INTERFACE include/)
