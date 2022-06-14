@@ -6,6 +6,7 @@
 #include <memory>
 #include <vector>
 #include <stdexcept>
+#include <optional>
 
 #include "AudioFileIf.h"
 #include "ErrorDef.h"
@@ -17,6 +18,9 @@ using std::vector;
 using std::unique_ptr;
 using std::cout;
 using std::endl;
+
+std::optional<Exception> openInputFile(const string& inputFilePath, CAudioFileIf*& audioFileIn, CAudioFileIf::FileSpec_t& fileSpec);
+std::optional<Exception> openOutputFile(const string& outputFilePath, CAudioFileIf*& audioFileOut, CAudioFileIf::FileSpec_t& fileSpec);
 
 int main(int argc, char* argv[])
 {
@@ -37,32 +41,26 @@ int main(int argc, char* argv[])
 	float gain{};
 	float delayInSec{};
 
+	std::optional<Exception> ex;
+
 	cout << "-- CombFilter Effect -- " << endl;
-	cout << endl;
 
 	try {
 		if (argc == 1) {
 			///////////////////
 			/// Open Input File
+			cout << endl;
 			cout << std::setw(labelFormat) << std::right << "Input WAV file: ";
 			std::cin >> inputFilePath;
-			CAudioFileIf::create(audioFileIn);
-			audioFileIn->openFile(inputFilePath, CAudioFileIf::FileIoType_t::kFileRead);
-			if (!audioFileIn->isOpen()) {
-				throw Exception("Couldn't open input file...");
-			}
-			audioFileIn->getFileSpec(fileSpec);
-
+			ex = openInputFile(inputFilePath, audioFileIn, fileSpec);
+			if (ex.has_value()) throw ex.value();
 
 			////////////////////
 			/// Open Output File
 			cout << std::setw(labelFormat) << "Output WAV file: ";
 			std::cin >> outputFilePath;
-			CAudioFileIf::create(audioFileOut);
-			audioFileOut->openFile(outputFilePath, CAudioFileIf::FileIoType_t::kFileWrite, &fileSpec);
-			if (!audioFileOut->isOpen()) {
-				throw Exception("Couldn't open output file...");
-			}
+			ex = openOutputFile(outputFilePath, audioFileOut, fileSpec);
+			if (ex.has_value()) throw ex.value();
 
 			////////////////////
 			/// Create Instances
@@ -131,20 +129,13 @@ int main(int argc, char* argv[])
 
 			///////////////////
 			/// Open Input File
-			CAudioFileIf::create(audioFileIn);
-			audioFileIn->openFile(inputFilePath, CAudioFileIf::FileIoType_t::kFileRead);
-			if (!audioFileIn->isOpen()) {
-				throw Exception("Couldn't open input file...");
-			}
-			audioFileIn->getFileSpec(fileSpec);
+			ex = openInputFile(inputFilePath, audioFileIn, fileSpec);
+			if (ex.has_value()) throw ex.value();
 
 			////////////////////
 			/// Open Output File
-			CAudioFileIf::create(audioFileOut);
-			audioFileOut->openFile(outputFilePath, CAudioFileIf::FileIoType_t::kFileWrite, &fileSpec);
-			if (!audioFileOut->isOpen()) {
-				throw Exception("Couldn't open output file...");
-			}
+			ex = openOutputFile(outputFilePath, audioFileOut, fileSpec);
+			if (ex.has_value()) throw ex.value();
 
 			////////////////////
 			/// Create Instances
@@ -242,4 +233,25 @@ int main(int argc, char* argv[])
 	}
 
 	return 0;
+}
+
+std::optional<Exception> openInputFile(const string& inputFilePath, CAudioFileIf*& audioFileIn, CAudioFileIf::FileSpec_t& fileSpec)
+{
+	CAudioFileIf::create(audioFileIn);
+	audioFileIn->openFile(inputFilePath, CAudioFileIf::FileIoType_t::kFileRead);
+	if (!audioFileIn->isOpen()) {
+		return Exception("Couldn't open input file...");
+	}
+	audioFileIn->getFileSpec(fileSpec);
+	return std::nullopt;
+}
+
+std::optional<Exception> openOutputFile(const string& outputFilePath, CAudioFileIf*& audioFileOut, CAudioFileIf::FileSpec_t& fileSpec)
+{
+	CAudioFileIf::create(audioFileOut);
+	audioFileOut->openFile(outputFilePath, CAudioFileIf::FileIoType_t::kFileWrite, &fileSpec);
+	if (!audioFileOut->isOpen()) {
+		return Exception("Couldn't open output file...");
+	}
+	return std::nullopt;
 }
