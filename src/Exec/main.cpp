@@ -21,6 +21,7 @@ using std::endl;
 int main(int argc, char* argv[])
 {
 	static const int fileBlockSize = 1023;
+	const int labelFormat = 30;
 
 	CAudioFileIf* audioFileIn  = nullptr;
 	CAudioFileIf* audioFileOut = nullptr;
@@ -36,14 +37,13 @@ int main(int argc, char* argv[])
 	float gain{};
 	float delayInSec{};
 
+	cout << "-- CombFilter Effect -- " << endl;
+	cout << endl;
+
 	try {
 		if (argc == 1) {
-			cout << "-- CombFilter Effect -- " << endl;
-			cout << endl;
-
 			///////////////////
 			/// Open Input File
-			const int labelFormat = 30;
 			cout << std::setw(labelFormat) << std::right << "Input WAV file: ";
 			std::cin >> inputFilePath;
 			CAudioFileIf::create(audioFileIn);
@@ -134,9 +134,7 @@ int main(int argc, char* argv[])
 			CAudioFileIf::create(audioFileIn);
 			audioFileIn->openFile(inputFilePath, CAudioFileIf::FileIoType_t::kFileRead);
 			if (!audioFileIn->isOpen()) {
-				cout << "Couldn't open input file..." << endl;
-				CAudioFileIf::destroy(audioFileIn);
-				return -1;
+				throw Exception("Couldn't open input file...");
 			}
 			audioFileIn->getFileSpec(fileSpec);
 
@@ -145,10 +143,7 @@ int main(int argc, char* argv[])
 			CAudioFileIf::create(audioFileOut);
 			audioFileOut->openFile(outputFilePath, CAudioFileIf::FileIoType_t::kFileWrite, &fileSpec);
 			if (!audioFileOut->isOpen()) {
-				cout << "Couldn't open output file..." << endl;
-				CAudioFileIf::destroy(audioFileIn);
-				CAudioFileIf::destroy(audioFileOut);
-				return -1;
+				throw Exception("Couldn't open output file...");
 			}
 
 			////////////////////
@@ -174,45 +169,77 @@ int main(int argc, char* argv[])
 		else {
 			throw Exception("Incorrect number of arguments");
 		}
+
+		// Allocate memory
+		inputAudioData = new float* [fileSpec.iNumChannels]{};
+		outputAudioData = new float* [fileSpec.iNumChannels]{};
+		for (int c = 0; c < fileSpec.iNumChannels; c++) {
+			inputAudioData[c] = new float[fileBlockSize] {};
+			outputAudioData[c] = new float[fileBlockSize] {};
+		}
+
+		// Process
+		long long iNumFrames = fileBlockSize;
+		while (!audioFileIn->isEof()) {
+			if (audioFileIn->readData(inputAudioData, iNumFrames) != Error_t::kNoError) {
+				throw Exception("Data reading error...");
+			};
+			for (int c = 0; c < combFilter.size(); c++) {
+				if (combFilter[c]->process(inputAudioData[c], outputAudioData[c], iNumFrames) != Error_t::kNoError) {
+					throw Exception("Processing error...");
+				}
+			}
+			if (audioFileOut->writeData(outputAudioData, iNumFrames) != Error_t::kNoError) {
+				throw Exception("Data writing error...");
+			};
+		}
+
+		cout << endl;
+		cout << std::setw(labelFormat) << "Done processing..." << endl;
+		cout << "\n-- CombFilter Effect -- " << endl;
+		cout << endl;
+
+		// Clean-up
+		for (int c = 0; c < fileSpec.iNumChannels; c++) {
+			delete[] inputAudioData[c];
+			delete[] outputAudioData[c];
+		}
+		delete[] inputAudioData;
+		delete[] outputAudioData;
+
+		CAudioFileIf::destroy(audioFileOut);
+		CAudioFileIf::destroy(audioFileOut);
 	}
 	catch (Exception& ex) {
+		if (audioFileIn) {
+			CAudioFileIf::destroy(audioFileIn);
+		}
+		if (audioFileOut) {
+			CAudioFileIf::destroy(audioFileOut);
+		}
+		if (inputAudioData) {
+			for (int c = 0; c < fileSpec.iNumChannels; c++) {
+				delete[] inputAudioData[c];
+			}
+			delete[] inputAudioData;
+		}
+		if (outputAudioData) {
+			for (int c = 0; c < fileSpec.iNumChannels; c++) {
+				delete[] outputAudioData[c];
+			}
+			delete[] outputAudioData;
+		}
+		audioFileIn = nullptr;
+		audioFileOut = nullptr;
+		inputAudioData = nullptr;
+		outputAudioData = nullptr;
+		combFilter.clear();
+
 		cout << "\n--------------------------" << endl;
 		cout << ex.what() << endl;
 		cout << "--------------------------" << endl;
 		return -1;
 	}
-
-	// Allocate memory
-	inputAudioData  = new float* [fileSpec.iNumChannels]{};
-	outputAudioData = new float* [fileSpec.iNumChannels]{};
-	for (int c = 0; c < fileSpec.iNumChannels; c++){
-		inputAudioData[c]  = new float[fileBlockSize]{};
-		outputAudioData[c] = new float[fileBlockSize]{};
-	}
-
-	// Process
-	long long iNumFrames = fileBlockSize;
-	while (!audioFileIn->isEof()){
-		audioFileIn->readData(inputAudioData, iNumFrames);
-		for (int c = 0; c < combFilter.size(); c++) {
-			combFilter[c]->process(inputAudioData[c], outputAudioData[c], iNumFrames);
-		}
-		audioFileOut->writeData(outputAudioData, iNumFrames);
-	}
-
-	cout << endl;
-	cout << "Done" << endl;
-
-	// Clean-up
-	for (int c = 0; c < fileSpec.iNumChannels; c++) {
-		delete[] inputAudioData[c];
-		delete[] outputAudioData[c];
-	}
-	delete[] inputAudioData;
-	delete[] outputAudioData;
-
-	CAudioFileIf::destroy(audioFileOut);
-	CAudioFileIf::destroy(audioFileOut);
 
 	return 0;
 }
