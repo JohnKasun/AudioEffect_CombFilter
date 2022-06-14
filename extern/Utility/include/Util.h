@@ -4,6 +4,7 @@
 #include <cassert>
 #include <cstring>
 #include <limits>
+#include <string>
 
 /*! \brief class with static utility functions 
 */
@@ -71,6 +72,18 @@ public:
 
         tValue1 = tValue2;
         tValue2 = tTmp;
+    }
+
+    static void toLower(std::string& input)
+    {
+        for (char& c : input)
+            c = tolower(c);
+    }
+
+    static void toUpper(std::string& input)
+    {
+        for (char& c : input)
+            c = toupper(c);
     }
 };
 #endif // __Util_hdr__
