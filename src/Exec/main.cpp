@@ -46,109 +46,58 @@ int main(int argc, char* argv[])
 	cout << "-- CombFilter Effect -- " << endl;
 
 	try {
-		if (argc == 1) {
-			// Open Input File
-			cout << endl;
-			cout << std::setw(labelFormat) << std::right << "Input WAV file: ";
-			std::cin >> inputFilePath;
-			ex = openInputFile(inputFilePath, audioFileIn, fileSpec);
-			if (ex.has_value()) throw ex.value();
+		// Open Input File
+		cout << endl;
+		cout << std::setw(labelFormat) << std::right << "Input WAV file: ";
+		std::cin >> inputFilePath;
+		ex = openInputFile(inputFilePath, audioFileIn, fileSpec);
+		if (ex.has_value()) throw ex.value();
 
-			// Open Output File
-			cout << std::setw(labelFormat) << "Output WAV file: ";
-			std::cin >> outputFilePath;
-			ex = openOutputFile(outputFilePath, audioFileOut, fileSpec);
-			if (ex.has_value()) throw ex.value();
+		// Open Output File
+		cout << std::setw(labelFormat) << "Output WAV file: ";
+		std::cin >> outputFilePath;
+		ex = openOutputFile(outputFilePath, audioFileOut, fileSpec);
+		if (ex.has_value()) throw ex.value();
 
-			// Create Instances
-			for (int c = 0; c < fileSpec.iNumChannels; c++) {
-				combFilter.emplace_back(new CombFilter(fileSpec.fSampleRateInHz));
-			}
-
-			// Set Filter Type
-			cout << std::setw(labelFormat) << "Filter Type (fir or iir): ";
-			string filterInput;
-			std::cin >> filterInput;
-			CUtil::toLower(filterInput);
-			if (filterInput == "fir") {
-				filterType = CombFilter::FilterType_t::fir;
-			}
-			else if (filterInput == "iir") {
-				filterType = CombFilter::FilterType_t::iir;
-			}
-			else {
-				throw Exception("Invalid Filter Type");
-			}
-			for (int c = 0; c < fileSpec.iNumChannels; c++) {
-				combFilter[c]->setFilterType(filterType);
-			}
-
-			// Set Gain
-			cout << std::setw(labelFormat) << "Gain (-1.0 - 1.0): ";
-			std::cin >> gain;
-			for (int c = 0; c < fileSpec.iNumChannels; c++) {
-				if (combFilter[c]->setParam(CombFilter::gain, gain) != Error_t::kNoError) {
-					throw Exception("Invalid gain value...");
-				}
-			}
-
-			// SET Delay
-			cout << std::setw(labelFormat) << "Delay (0.01 - 10.0): ";
-			std::cin >> delayInSec;
-			for (int c = 0; c < fileSpec.iNumChannels; c++) {
-				if (combFilter[c]->setParam(CombFilter::delayInSec, delayInSec) != Error_t::kNoError) {
-					throw Exception("Invalid delay value...");
-				}
-			}
-
+		// Create Instances
+		for (int c = 0; c < fileSpec.iNumChannels; c++) {
+			combFilter.emplace_back(new CombFilter(fileSpec.fSampleRateInHz));
 		}
-		else if (argc == 6) {
-			// Get Parameters
-			inputFilePath = argv[1];
-			outputFilePath = argv[2];
-			string filterInput = argv[3];
-			CUtil::toLower(filterInput);
-			if (filterInput == "fir") {
-				filterType = CombFilter::FilterType_t::fir;
-			}
-			else if (filterInput == "iir") {
-				filterType = CombFilter::FilterType_t::iir;
-			}
-			else {
-				throw Exception("Invalid filter type...");
-			}
-			gain = atof(argv[4]);
-			delayInSec = atof(argv[5]);
 
-
-			// Open Input File
-			ex = openInputFile(inputFilePath, audioFileIn, fileSpec);
-			if (ex.has_value()) throw ex.value();
-
-			// Open Output File
-			ex = openOutputFile(outputFilePath, audioFileOut, fileSpec);
-			if (ex.has_value()) throw ex.value();
-
-			// Create Instances
-			for (int c = 0; c < fileSpec.iNumChannels; c++) {
-				combFilter.emplace_back(new CombFilter(fileSpec.fSampleRateInHz));
-			}
-
-			// Set Parameters
-			for (int c = 0; c < combFilter.size(); c++) {
-				if (combFilter[c]->setFilterType(filterType) != Error_t::kNoError) {
-					throw Exception("Invalid filter type...");
-				}
-				if (combFilter[c]->setParam(CombFilter::Param_t::gain, gain) != Error_t::kNoError) {
-					throw Exception("Invalid gain value...");
-				}
-				if (combFilter[c]->setParam(CombFilter::Param_t::delayInSec, delayInSec) != Error_t::kNoError) {
-					throw Exception("Invalid delay value...");
-				}
-			}
+		// Set Filter Type
+		cout << std::setw(labelFormat) << "Filter Type (fir or iir): ";
+		string filterInput;
+		std::cin >> filterInput;
+		CUtil::toLower(filterInput);
+		if (filterInput == "fir") {
+			filterType = CombFilter::FilterType_t::fir;
+		}
+		else if (filterInput == "iir") {
+			filterType = CombFilter::FilterType_t::iir;
 		}
 		else {
-			throw Exception("Incorrect number of arguments");
+			throw Exception("Invalid Filter Type");
+		}
+		for (int c = 0; c < fileSpec.iNumChannels; c++) {
+			combFilter[c]->setFilterType(filterType);
+		}
+
+		// Set Gain
+		cout << std::setw(labelFormat) << "Gain (-1.0 - 1.0): ";
+		std::cin >> gain;
+		for (int c = 0; c < fileSpec.iNumChannels; c++) {
+			if (combFilter[c]->setParam(CombFilter::gain, gain) != Error_t::kNoError) {
+				throw Exception("Invalid gain value...");
+			}
+		}
+
+		// SET Delay
+		cout << std::setw(labelFormat) << "Delay (0.01 - 10.0): ";
+		std::cin >> delayInSec;
+		for (int c = 0; c < fileSpec.iNumChannels; c++) {
+			if (combFilter[c]->setParam(CombFilter::delayInSec, delayInSec) != Error_t::kNoError) {
+				throw Exception("Invalid delay value...");
+			}
 		}
 
 		// Allocate memory
@@ -190,6 +139,8 @@ int main(int argc, char* argv[])
 
 		CAudioFileIf::destroy(audioFileOut);
 		CAudioFileIf::destroy(audioFileOut);
+
+		return 0;
 	}
 	catch (Exception& ex) {
 		if (audioFileIn) {
@@ -221,8 +172,6 @@ int main(int argc, char* argv[])
 		cout << "--------------------------" << endl;
 		return -1;
 	}
-
-	return 0;
 }
 
 std::optional<Exception> openInputFile(const string& inputFilePath, CAudioFileIf*& audioFileIn, CAudioFileIf::FileSpec_t& fileSpec)
