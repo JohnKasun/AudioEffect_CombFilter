@@ -4,7 +4,8 @@ juce_add_plugin(${APP}
     PLUGIN_MANUFACTURER_CODE John
     PLUGIN_CODE CFlt
     FORMATS AU AUv3 VST3 Standalone
-    PRODUCT_NAME "CombFilter Plugin")
+    PRODUCT_NAME "CombFilter Plugin"
+    COMPANY_NAME JohnKasun)
 
 file(GLOB ${APP}_SOURCES *.cpp)
 file(GLOB ${APP}_HEADERS include/*.h)
